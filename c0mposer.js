@@ -7,67 +7,109 @@ var c0mposer;
         },
 
         debug: true,
-        parseFunction: null,
+        library: {},
 
         compose: function () {
-            var obj = { }, composer = this;
-            _.each(arguments, function(sourceDef) {
-                var source = _.isString(sourceDef) && composer.parseFunction ? composer.parseFunction(sourceDef) : sourceDef;
-                for (var prop in source) {
-                    if (_.isFunction(obj[prop])) {
-                        if (_.isFunction(source[prop])) {
-                            if (obj[prop].hasOwnProperty("_stack")) {
-                                if (source[prop].hasOwnProperty("_stack")) {
-                                    Array.prototype.splice.apply(obj[prop]._stack, [obj[prop]._stack.length - 1, 0].concat(source[prop]._stack));
-                                } else {
-                                    if (composer.debug) {
-                                        obj[prop]._stack.push({ name: sourceDef, fnc: source[prop] });
-                                    } else {
-                                        obj[prop]._stack.push(source[prop]);
-                                    }
-                                }
-                            } else {
-                                (function () {
-                                    var stack;
-                                    if (composer.debug) {
-                                        stack = [{ fnc: obj[prop] }, { name: sourceDef, fnc: source[prop] }];
-                                    } else {
-                                        stack = [obj[prop], source[prop]];
-                                    }
-                                    obj[prop] = function () {
-                                        for (var i = 0; i < stack.length; i++) {
-                                            if (composer.debug) {
-                                                stack[i].fnc.apply(this, arguments);
-                                            } else {
-                                                stack[i].apply(this, arguments);
-                                            }
-                                        }
-                                    };
-                                    obj[prop]._stack = stack;
-                                })();
-                            }
-                        } else {
-                            composer.throwError("addingExtendFunctionWithNonFunction");
-                        }
-                    } else if (_.isArray(obj[prop])) {
-                        if (_.isArray(source[prop])) {
-                            obj[prop] = obj[prop].concat(source[prop]);
-                        } else {
-                            composer.throwError("addingExtendArrayWithNonArray");
-                        }
-                    } else if (source[prop] !== null) {
-                        obj[prop] = source[prop];
-                    }
-                }
+            var composer = this;
+            var obj = { };
+            _.each(arguments, function (argument) {
+                composer.composeOne(obj, argument);
             });
             return obj;
         },
+        composeOne: function (obj, srcDef) {
+            var composer = this;
+            var src = srcDef;
+            if (_.isFunction(this.parseString) && _.isString(src)) {
+                src = this.parseString(src);
+            }
+            _.each(src, function (value, key) {
+                composer.composeProperty(obj, src, key, srcDef);
+            });
+        },
+        parseString: function (string) {
+            if (!this.library.hasOwnProperty(string)) {
+                this.throwError("couldNotParseString", string);
+            }
+            return this.library[string];
+        },
+        composeProperty: function (obj, src, prop, debugName) {
+            if (_.isArray(obj[prop])) {
+                this.composeArrays.apply(this, arguments);
+            } else if (_.isFunction(obj[prop])) {
+                this.composeFunctions.apply(this, arguments);
+            } else if (src[prop] !== null) {
+                obj[prop] = src[prop];
+            }            
+        },
+        composeArrays: function (obj, src, prop) {
+            if (!_.isArray(src[prop])) {
+                this.throwError("extendingArrayWithNonArray", src[prop]);
+            }
+            obj[prop] = obj[prop].concat(src[prop]);
+        },
+        composeFunctions: function (obj, src, prop, debugName) {
+            if (!_.isFunction(src[prop])) {
+                this.throwError("extendingFunctionWithNonFunction", src[prop]);
+            }
+            if (!obj[prop].hasOwnProperty("_stack")) {
+                var stackFunction = this.createStackFunction();
+                stackFunction.pushFunction(obj[prop]);
+                obj[prop] = stackFunction;
+            }
+            obj[prop].pushFunction(src[prop], debugName);
+        },
+        createStackFunction: function () {
+            var stack = [];
+            var stackFunction;
+
+            if (c0mposer.debug) {
+                stackFunction = function () {
+                    for (var i = 0; i < stack.length; i++) {
+                        stack[i].fnc.apply(this, arguments);
+                    }
+                };
+            } else {
+                stackFunction = function () {
+                    for (var i = 0; i < stack.length; i++) {
+                        stack[i].apply(this, arguments);
+                    }
+                };
+            }
+            stackFunction._stack = stack;
+            stackFunction.pushFunction = function (fnc, debugName) {
+                if (fnc.hasOwnProperty("_stack")) {
+                    this.concat(fnc);
+                } else {
+                    this.addOne(fnc, debugName);
+                }
+                return this;
+            };
+            stackFunction.concat = function (stackFunction) {
+                Array.prototype.splice.apply(this._stack, [this._stack.length, 0].concat(stackFunction._stack));
+                return this;
+            };
+            if (c0mposer.debug) {
+                stackFunction.addOne = function (fnc, debugName) {
+                    this._stack.push({ name: debugName, fnc: fnc });
+                    return this;
+                };
+            } else {
+                stackFunction.addOne = function (fnc) {
+                    this._stack.push(fnc);
+                    return this;
+                };
+            }
+            return stackFunction;
+        },
+
         log: function (msg) {
-            if (this.debug && typeof (console) != "undefined") {
+            if (c0mposer.debug && typeof (console) != "undefined") {
                 console.log(msg);
             }
         },
         throwError: function (msg, obj) {
+            this.log("c0mposer error \"" + msg + "\", with object:");
             this.log(obj);
             throw msg;
         }
