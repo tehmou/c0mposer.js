@@ -48,31 +48,57 @@ var c0mposer;
             }
             return this.library[string];
         },
+        resolveKind: function (obj) {
+            if (_.isArray(obj)) {
+                return "array";
+            } else if (_.isFunction(obj)) {
+                return "function";
+            } else if ( _.isString(obj) || _.isBoolean(obj) || _.isNumber(obj)) {
+                return "basic";
+            } else if (_.isUndefined(obj) || _.isNaN(obj) || _.isNull(obj)) {
+                return "empty";
+            } else {
+                return "object";
+            }
+        },
         composeProperty: function (obj, src, prop, debugName) {
-            if (_.isArray(obj[prop])) {
-                this.composeArrays.apply(this, arguments);
-            } else if (_.isFunction(obj[prop])) {
-                this.composeFunctions.apply(this, arguments);
-            } else if (src[prop] !== null) {
-                obj[prop] = src[prop];
-            }            
+            var objKind = this.resolveKind(obj[prop]);
+            var srcKind = this.resolveKind(src[prop]);
+            var value;
+
+            if (srcKind === "empty") {
+                return;
+            } else if (objKind === "empty") {
+                value = src[prop];
+            } else if (objKind === "basic" && srcKind === "basic") {
+                value = src[prop];
+            } else if (objKind === "array" && srcKind === "array") {
+                value = this.composeArrays(obj[prop], src[prop]);
+            } else if (objKind === "function" && srcKind === "function") {
+                value = this.composeFunctions(obj[prop], src[prop], debugName);
+            } else if (objKind === "object" && srcKind === "object") {
+                value = this.composeObjects(obj[prop], src[prop]);
+            } else {
+                this.throwError("extendingPropertyKindMismatch", [objKind, srcKind]);
+            }
+            obj[prop] = value;
         },
-        composeArrays: function (obj, src, prop) {
-            if (!_.isArray(src[prop])) {
-                this.throwError("extendingArrayWithNonArray", src[prop]);
-            }
-            obj[prop] = obj[prop].concat(src[prop]);
+        composeArrays: function (a, b) {
+            return a.concat(b);
         },
-        composeFunctions: function (obj, src, prop, debugName) {
-            if (!_.isFunction(src[prop])) {
-                this.throwError("extendingFunctionWithNonFunction", src[prop]);
+        composeObjects: function (a, b) {
+            return _.extend({}, a, b);
+        },
+        composeFunctions: function (a, b, debugName) {
+            var stackFunction;
+            if (!a.hasOwnProperty("_stack")) {
+                stackFunction = this.createStackFunction();
+                stackFunction.pushFunction(a);
+            } else {
+                stackFunction = a;
             }
-            if (!obj[prop].hasOwnProperty("_stack")) {
-                var stackFunction = this.createStackFunction();
-                stackFunction.pushFunction(obj[prop]);
-                obj[prop] = stackFunction;
-            }
-            obj[prop].pushFunction(src[prop], debugName);
+            stackFunction.pushFunction(b, debugName);
+            return stackFunction;
         },
         createStackFunction: function () {
             var stack = [];

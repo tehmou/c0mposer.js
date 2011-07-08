@@ -3,7 +3,14 @@ describe("c0mposer.compose", function () {
 
     beforeEach(function () {
         c0mposer.debug = true;
-        obj = { a: "1", b: 2, c: true, d: function () { }, e: ["firstItem", "secondItem"] };
+        obj = {
+            a: "1",
+            b: 2,
+            c: true,
+            d: function () { },
+            e: ["firstItem", "secondItem"],
+            o: { key: "value", secondKey: "secondValue" }
+        };
         composer = c0mposer.instance();
     });
 
@@ -23,7 +30,7 @@ describe("c0mposer.compose", function () {
         expect(obj.k).toEqual(6);
     });
 
-    it("should replace properties that are not arrays of functions", function () {
+    it("should replace properties that are strings, booleans or numbers", function () {
         composer.compose(obj, { a: "5", b: true, c: 784 });
         expect(obj.a).toEqual("5");
         expect(obj.b).toEqual(true);
@@ -34,6 +41,11 @@ describe("c0mposer.compose", function () {
         composer.compose(obj, { e: ["thirdItem"] });
         expect(obj.e.length).toEqual(3);
         expect(obj.e[2]).toEqual("thirdItem");
+    });
+
+    it("should merge objects", function () {
+        composer.compose(obj, { o: { key: "newValue", otherKey: "otherValue" } });
+        expect(obj.o).toEqual({ key: "newValue", secondKey: "secondValue", otherKey: "otherValue" });
     });
 
     describe("Function properties", function () {
@@ -149,15 +161,23 @@ describe("c0mposer.compose", function () {
             try {
                 composer.compose(obj, { e: "Hello world" });
             } catch(e) {
-                errorThrown = e === "extendingArrayWithNonArray";
+                errorThrown = e === "extendingPropertyKindMismatch";
             }
         });
 
         it("should throw an error when trying to replace a function with something else", function () {
             try {
-                composer.compose(obj, { d: null });
+                composer.compose(obj, { d: "Hello world" });
             } catch(e) {
-                errorThrown = e === "extendingFunctionWithNonFunction";
+                errorThrown = e === "extendingPropertyKindMismatch";
+            }
+        });
+
+        it("should throw an error when trying to replace an object with something else", function () {
+            try {
+                composer.compose(obj, { o: "Hello world" });
+            } catch(e) {
+                errorThrown = e === "extendingPropertyKindMismatch";
             }
         });
     });
