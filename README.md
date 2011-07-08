@@ -31,17 +31,22 @@ Rules for Combining Single Properties
 ### null, NaN, undefined
 Always replaced by new value.
 
+
 ### Array
 Concatenated with the old one first.
+
 
 ### Function
 Called in order from old to new.
 
+
 ### Number, Boolean, String
 Replaced with the new one, if it is of one of these as well.
 
+
 ### Object
 Properties of the new object override those of the old.
+
 
 
 Using a Library of Objects
@@ -62,7 +67,7 @@ Then use corresponding strings.
     var guy = c0mposer.create("myObject", "object2", "group.germanese");
 
 
-Debugging Object Created from Library
+Debugging Objects Created from a Library
 ---------
 
 Turn debugging on.
