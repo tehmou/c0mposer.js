@@ -2,7 +2,6 @@ describe("c0mposer.compose", function () {
     var obj, composer;
 
     beforeEach(function () {
-        c0mposer.debug = true;
         obj = {
             a: "1",
             b: 2,
@@ -50,7 +49,6 @@ describe("c0mposer.compose", function () {
 
     describe("Function properties", function () {
         it("should concatenate two stack functions", function () {
-            c0mposer.debug = false;
             var f1 = function () { };
             var f2 = function () { };
             var f3 = function () { };
@@ -109,13 +107,12 @@ describe("c0mposer.compose", function () {
             });
 
             it("should call all replaced functions", function () {
-                c0mposer.debug = false;
                 composer.compose(obj, { f: f2 }, { f: f3 });
                 obj.f(args);
             });
 
             it("should call all replaced functions when debugging", function () {
-                c0mposer.debug = true;
+                composer.debug = true;
                 composer.compose(obj, { f: f2 }, { f: f3 });
                 obj.f(args);
             });
@@ -130,13 +127,12 @@ describe("c0mposer.compose", function () {
             });
 
             it("should not save debugging info when debug is set to false", function () {
-                c0mposer.debug = false;
                 var obj2 = composer.create(obj, "first", "second");
                 expect(obj2.d._stack).toEqual([ obj.d, composer.library.first.d, composer.library.second.d ]);
             });
 
             it("should save debugging info when debug is set to true", function () {
-                c0mposer.debug = true;
+                composer.debug = true;
                 var obj2 = composer.create(obj, "first", "second");
                 expect(obj2.d._stack).toBeDefined();
                 expect(obj2.d._stack[0]).toEqual({ fnc: obj.d });

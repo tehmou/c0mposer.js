@@ -13,7 +13,7 @@ var c0mposer;
 (function () {
     c0mposer = {
 
-        debug: true,
+        debug: false,
         library: {},
 
         instance: function (options) {
@@ -24,23 +24,31 @@ var c0mposer;
             return this.compose.apply(this, arguments);
         },
         compose: function () {
-            var composer = this;
             var obj = arguments[0];
+            if (this.debug) {
+                obj._lineage = obj._lineage || [];
+            }
             Array.prototype.splice.apply(arguments, [0, 1]);
-            _.each(arguments, function (argument) {
-                composer.composeOne(obj, argument);
-            });
+            _.each(arguments, _.bind(function (argument) {
+                this.composeOne(obj, argument);
+            }, this));
             return obj;
         },
         composeOne: function (obj, srcDef) {
-            var composer = this;
             var src = srcDef;
-            if (_.isFunction(this.parseString) && _.isString(src)) {
-                src = this.parseString(src);
+            if (_.isString(src)) {
+                if (this.debug) {
+                    obj._lineage.push(src);
+                }
+                if (_.isFunction(this.parseString)) {
+                    src = this.parseString(src);
+                }
+            } else if (this.debug && src._lineage) {
+                obj._lineage = obj._lineage.concat(src._lineage);
             }
-            _.each(src, function (value, key) {
-                composer.composeProperty(obj, src, key, srcDef);
-            });
+            _.each(src, _.bind(function (value, key) {
+                this.composeProperty(obj, src, key, srcDef);
+            }, this));
         },
         parseString: function (string) {
             if (!this.library.hasOwnProperty(string)) {
@@ -104,7 +112,7 @@ var c0mposer;
             var stack = [];
             var stackFunction;
 
-            if (c0mposer.debug) {
+            if (this.debug) {
                 stackFunction = function () {
                     for (var i = 0; i < stack.length; i++) {
                         stack[i].fnc.apply(this, arguments);
@@ -130,7 +138,7 @@ var c0mposer;
                 Array.prototype.splice.apply(this._stack, [this._stack.length, 0].concat(stackFunction._stack));
                 return this;
             };
-            if (c0mposer.debug) {
+            if (this.debug) {
                 stackFunction.addOne = function (fnc, debugName) {
                     this._stack.push({ name: debugName, fnc: fnc });
                     return this;
@@ -145,7 +153,7 @@ var c0mposer;
         },
 
         log: function (msg) {
-            if (c0mposer.debug && typeof (console) != "undefined") {
+            if (this.debug && typeof (console) != "undefined") {
                 console.log(msg);
             }
         },
