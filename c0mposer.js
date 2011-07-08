@@ -1,17 +1,32 @@
+/**
+ * c0mposer.js
+ *
+ * (c) 2011 Timo Tuominen
+ * May be freely distributed under the MIT license.
+ * For all details and documentation:
+ * http://tehmou.github.com/c0mposer.js
+ *
+ */
+
 var c0mposer;
 
 (function () {
     c0mposer = {
-        create: function (options) {
-            return _.extend({}, c0mposer, options || {});
-        },
 
         debug: true,
         library: {},
 
+        instance: function (options) {
+            return _.extend({}, c0mposer, options || {});
+        },
+        create: function () {
+            Array.prototype.splice.apply(arguments, [0, 0, {}]);
+            return this.compose.apply(this, arguments);
+        },
         compose: function () {
             var composer = this;
-            var obj = { };
+            var obj = arguments[0];
+            Array.prototype.splice.apply(arguments, [0, 1]);
             _.each(arguments, function (argument) {
                 composer.composeOne(obj, argument);
             });

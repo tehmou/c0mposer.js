@@ -4,18 +4,18 @@ describe("c0mposer.compose", function () {
     beforeEach(function () {
         c0mposer.debug = true;
         obj = { a: "1", b: 2, c: true, d: function () { }, e: ["firstItem", "secondItem"] };
-        composer = c0mposer.create();
+        composer = c0mposer.instance();
     });
 
     it("should create a new instance and leave the original one untouched", function () {
-        var obj2 = composer.compose(obj);
+        var obj2 = composer.create(obj);
         expect(obj2===obj).toBeFalsy();
         expect(obj2).toEqual(obj);
     });
 
     it("should add property if it does not exist", function () {
         var array = ["newArray"], object = {};
-        obj = composer.compose(obj, { f: array, g: object, h: "stringy", i: false, k: 6 });
+        composer.compose(obj, { f: array, g: object, h: "stringy", i: false, k: 6 });
         expect(obj.f).toEqual(array);
         expect(obj.g).toEqual(object);
         expect(obj.h).toEqual("stringy");
@@ -24,14 +24,14 @@ describe("c0mposer.compose", function () {
     });
 
     it("should replace properties that are not arrays of functions", function () {
-        obj = composer.compose(obj, { a: "5", b: true, c: 784 });
+        composer.compose(obj, { a: "5", b: true, c: 784 });
         expect(obj.a).toEqual("5");
         expect(obj.b).toEqual(true);
         expect(obj.c).toEqual(784);
     });
 
     it("should concatenate arrays", function () {
-        obj = composer.compose(obj, { e: ["thirdItem"] });
+        composer.compose(obj, { e: ["thirdItem"] });
         expect(obj.e.length).toEqual(3);
         expect(obj.e[2]).toEqual("thirdItem");
     });
@@ -59,7 +59,7 @@ describe("c0mposer.compose", function () {
 
                 f1 = function () {
                     if (f1Called || f2Called || f3Called) {
-                        throw "Wrong order in calling extended function (old one should be first).";
+                        throw "f1 Wrong order in calling extended function (old one should be first).";
                     }
                     if (arguments[0] !== args) {
                         throw "Wrong arguments given for f1";
@@ -69,7 +69,7 @@ describe("c0mposer.compose", function () {
 
                 f2 = function () {
                     if (f2Called || f3Called) {
-                        throw "Wrong order in calling extended function (old one should be first).";
+                        throw "f2 Wrong order in calling extended function (old one should be first).";
                     }
                     if (arguments[0] !== args) {
                         throw "Wrong arguments given for f2";
@@ -79,7 +79,7 @@ describe("c0mposer.compose", function () {
 
                 f3 = function () {
                     if (f3Called) {
-                        throw "Wrong order in calling extended function (old one should be first).";
+                        throw "f3 Wrong order in calling extended function (old one should be first).";
                     }
                     if (arguments[0] !== args) {
                         throw "Wrong arguments given for f3";
@@ -98,13 +98,13 @@ describe("c0mposer.compose", function () {
 
             it("should call all replaced functions", function () {
                 c0mposer.debug = false;
-                obj = composer.compose(obj, { f: f2 }, { f: f3 });
+                composer.compose(obj, { f: f2 }, { f: f3 });
                 obj.f(args);
             });
 
             it("should call all replaced functions when debugging", function () {
                 c0mposer.debug = true;
-                obj = composer.compose(obj, { f: f2 }, { f: f3 });
+                composer.compose(obj, { f: f2 }, { f: f3 });
                 obj.f(args);
             });
         });
@@ -119,13 +119,13 @@ describe("c0mposer.compose", function () {
 
             it("should not save debugging info when debug is set to false", function () {
                 c0mposer.debug = false;
-                var obj2 = composer.compose(obj, "first", "second");
+                var obj2 = composer.create(obj, "first", "second");
                 expect(obj2.d._stack).toEqual([ obj.d, composer.library.first.d, composer.library.second.d ]);
             });
 
             it("should save debugging info when debug is set to true", function () {
                 c0mposer.debug = true;
-                var obj2 = composer.compose(obj, "first", "second");
+                var obj2 = composer.create(obj, "first", "second");
                 expect(obj2.d._stack).toBeDefined();
                 expect(obj2.d._stack[0]).toEqual({ fnc: obj.d });
                 expect(obj2.d._stack[1]).toEqual({ name: "first", fnc: composer.library.first.d });
@@ -147,7 +147,7 @@ describe("c0mposer.compose", function () {
 
         it("should throw an error when trying to replace an array with something else", function () {
             try {
-                obj = composer.compose(obj, { e: "Hello world" });
+                composer.compose(obj, { e: "Hello world" });
             } catch(e) {
                 errorThrown = e === "extendingArrayWithNonArray";
             }
@@ -155,7 +155,7 @@ describe("c0mposer.compose", function () {
 
         it("should throw an error when trying to replace a function with something else", function () {
             try {
-                obj = composer.compose(obj, { d: null });
+                composer.compose(obj, { d: null });
             } catch(e) {
                 errorThrown = e === "extendingFunctionWithNonFunction";
             }
