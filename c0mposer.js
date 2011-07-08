@@ -26,7 +26,7 @@ var c0mposer;
         compose: function () {
             var obj = arguments[0];
             if (this.debug) {
-                obj._lineage = obj._lineage || [];
+                obj._lineage = obj._lineage || [undefined];
             }
             Array.prototype.splice.apply(arguments, [0, 1]);
             _.each(arguments, _.bind(function (argument) {
@@ -111,21 +111,17 @@ var c0mposer;
         createStackFunction: function () {
             var stack = [];
             var stackFunction;
+            var debug = this.debug;
 
-            if (this.debug) {
-                stackFunction = function () {
-                    for (var i = 0; i < stack.length; i++) {
-                        stack[i].fnc.apply(this, arguments);
-                    }
-                };
-            } else {
-                stackFunction = function () {
-                    for (var i = 0; i < stack.length; i++) {
-                        stack[i].apply(this, arguments);
-                    }
-                };
-            }
+            stackFunction = function () {
+                for (var i = 0; i < stack.length; i++) {
+                    stack[i].apply(this, arguments);
+                }
+            };
             stackFunction._stack = stack;
+            if (debug) {
+                stackFunction._lineage = [];
+            }
             stackFunction.pushFunction = function (fnc, debugName) {
                 if (fnc.hasOwnProperty("_stack")) {
                     this.concat(fnc);
@@ -136,19 +132,18 @@ var c0mposer;
             };
             stackFunction.concat = function (stackFunction) {
                 Array.prototype.splice.apply(this._stack, [this._stack.length, 0].concat(stackFunction._stack));
+                if (debug) {
+                    Array.prototype.splice.apply(this._lineage, [this._lineage.length, 0].concat(stackFunction._lineage));
+                }
                 return this;
             };
-            if (this.debug) {
-                stackFunction.addOne = function (fnc, debugName) {
-                    this._stack.push({ name: debugName, fnc: fnc });
-                    return this;
-                };
-            } else {
-                stackFunction.addOne = function (fnc) {
-                    this._stack.push(fnc);
-                    return this;
-                };
-            }
+            stackFunction.addOne = function (fnc, debugName) {
+                this._stack.push(fnc);
+                if (debug) {
+                    this._lineage.push(debugName);
+                }
+                return this;
+            };
             return stackFunction;
         },
 

@@ -134,10 +134,8 @@ describe("c0mposer.compose", function () {
             it("should save debugging info when debug is set to true", function () {
                 composer.debug = true;
                 var obj2 = composer.create(obj, "first", "second");
-                expect(obj2.d._stack).toBeDefined();
-                expect(obj2.d._stack[0]).toEqual({ fnc: obj.d });
-                expect(obj2.d._stack[1]).toEqual({ name: "first", fnc: composer.library.first.d });
-                expect(obj2.d._stack[2]).toEqual({ name: "second", fnc: composer.library.second.d });
+                expect(obj2._lineage).toEqual([undefined, "first", "second"]);
+                expect(obj2.d._lineage).toEqual([undefined, "first", "second"]);
             });
         });
     });
