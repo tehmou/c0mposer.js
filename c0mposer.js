@@ -123,9 +123,11 @@ var c0mposer;
             var debug = this.debug;
 
             stackFunction = function () {
+                var lastReturn;
                 for (var i = 0; i < stack.length; i++) {
-                    stack[i].apply(this, arguments);
+                    lastReturn = stack[i].apply(this, arguments);
                 }
+                return lastReturn;
             };
             stackFunction._stack = stack;
             if (debug) {
