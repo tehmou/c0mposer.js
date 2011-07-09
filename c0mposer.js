@@ -1,5 +1,5 @@
 /**
- * c0mposer.js 0.0.2
+ * c0mposer.js <master>
  *
  * (c) 2011 Timo Tuominen
  * May be freely distributed under the MIT license.
@@ -119,10 +119,8 @@ var c0mposer;
         },
         createStackFunction: function () {
             var stack = [];
-            var stackFunction;
             var debug = this.debug;
-
-            stackFunction = function () {
+            var stackFunction = function () {
                 var lastReturn;
                 for (var i = 0; i < stack.length; i++) {
                     lastReturn = stack[i].apply(this, arguments);
@@ -135,23 +133,15 @@ var c0mposer;
             }
             stackFunction.pushFunction = function (fnc, debugName) {
                 if (fnc.hasOwnProperty("_stack")) {
-                    this.concat(fnc);
+                    Array.prototype.splice.apply(this._stack, [this._stack.length, 0].concat(fnc._stack));
+                    if (debug) {
+                        Array.prototype.splice.apply(this._lineage, [this._lineage.length, 0].concat(fnc._lineage));
+                    }
                 } else {
-                    this.addOne(fnc, debugName);
-                }
-                return this;
-            };
-            stackFunction.concat = function (stackFunction) {
-                Array.prototype.splice.apply(this._stack, [this._stack.length, 0].concat(stackFunction._stack));
-                if (debug) {
-                    Array.prototype.splice.apply(this._lineage, [this._lineage.length, 0].concat(stackFunction._lineage));
-                }
-                return this;
-            };
-            stackFunction.addOne = function (fnc, debugName) {
-                this._stack.push(fnc);
-                if (debug) {
-                    this._lineage.push(debugName);
+                    this._stack.push(fnc);
+                    if (debug) {
+                        this._lineage.push(debugName);
+                    }
                 }
                 return this;
             };

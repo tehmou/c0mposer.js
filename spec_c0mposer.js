@@ -54,7 +54,7 @@ describe("c0mposer.compose", function () {
             var f3 = function () { };
             var f4 = function () { };
             var f5 = composer.createStackFunction().pushFunction(f1).pushFunction(f2);
-            var f6 = composer.createStackFunction().pushFunction(f3).pushFunction(f4).concat(f5);
+            var f6 = composer.createStackFunction().pushFunction(f3).pushFunction(f4).pushFunction(f5);
             expect(f6._stack).toEqual([f3, f4, f1, f2]);
         });
 
