@@ -25,10 +25,14 @@ Usage
     newObj.sayNumber(); // Alerts first "one" and then "two"
 
 
-Rules for Combining Single Properties
+Rules for Combining of Properties
 -------------------------------------
 
-We have two values, the old one and the new one. An error is thrown if the new value is not compatible with the old one. Old one stays untouched in this case.
+Everything is easy until both the old object and the new object have a property of the same name. This case is actually the whole purpose of c0mposer.
+
+An error is thrown if the new property value is not compatible with the old value. Old one stays untouched in this case.
+
+Below is a list of all possibilities, grouped by the kind of the old property.
 
 ### null, undefined, NaN
 Always replaced by the new value.
@@ -38,26 +42,26 @@ Always replaced by the new value.
     NaN, null => null
 
 ### Number, Boolean, String
-Replaced with the new one, if it is of one of these as well.
+Replaced with the new value, if it is of one of these as well.
 
     true, false => false
     4523, "foo" => "foo"
     "bar", [] => "bar" // Throws error
 
 ### Array
-Concatenated with the old one first.
+The arrays are concatenated with the old one first.
 
     ["A"], ["B", 2] => ["A", "B", 2]
     [1, 2], {} => [1, 2] // Throws error
 
 ### Function
-Called in order from old to new.
+The created function calls first the old function and then the new one.
 
     f1, f2 => f3 // Calls f1 first, then f2
     f1, "string" => f1 // Throws error
 
 ### Object
-Properties of the new object override those of the old.
+Properties of the new object override those of the old. This is equivalent to _.extend
 
     { type: "fruit", name: "orange" }, { name: "apple" } => { type: "fruit, name: "apple }
     { a: 1, b: 2 }, { b: 3, c: 4 } => { a: 1, b: 3, c: 4 }
