@@ -140,6 +140,29 @@ describe("c0mposer.compose", function () {
         });
     });
 
+    describe("Nested library entries", function () {
+        beforeEach(function () {
+            composer.library = {
+                first: {
+                    group: {
+                        name: "group"
+                    },
+                    second: {
+                        third: {
+                            property: "value"
+                        }
+                    }
+                }
+            };
+        });
+
+        it("should find the nested objects", function () {
+            var obj = composer.create("first.group", "first.second.third");
+            expect(obj.property).toEqual("value");
+            expect(obj.name).toEqual("group");
+        });
+    });
+
     describe("Error throwing", function () {
         var errorThrown;
 
