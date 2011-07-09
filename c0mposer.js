@@ -1,5 +1,5 @@
 /**
- * c0mposer.js 0.0.1
+ * c0mposer.js 0.0.2
  *
  * (c) 2011 Timo Tuominen
  * May be freely distributed under the MIT license.
