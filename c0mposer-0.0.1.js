@@ -88,7 +88,6 @@ var c0mposer;
                 value = this.composeObjects(obj[prop], src[prop]);
             } else {
                 this.throwError("extendingPropertyKindMismatch", [objKind, srcKind]);
-                return;
             }
             obj[prop] = value;
         },

@@ -28,21 +28,41 @@ Usage
 Rules for Combining Single Properties
 -------------------------------------
 
-### null, NaN, undefined
-Always replaced by new value.
+We have two values, the old one and the new one. An error is thrown if the new value is not compatible with the old one. Old one stays untouched in this case.
 
-### Array
-Concatenated with the old one first.
+### null, undefined, NaN
+Always replaced by the new value.
 
-### Function
-Called in order from old to new.
+    null, {} => {}
+    undefined, 3525 => 3525
+    NaN, null => null
 
 ### Number, Boolean, String
 Replaced with the new one, if it is of one of these as well.
 
+    true, false => false
+    4523, "foo" => "foo"
+    "bar", [] => "bar" // Throws error
+
+### Array
+Concatenated with the old one first.
+
+    ["A"], ["B", 2] => ["A", "B", 2]
+    [1, 2], {} => [1, 2] // Throws error
+
+### Function
+Called in order from old to new.
+
+    f1, f2 => f3 // Calls f1 first, then f2
+    f1, "string" => f1 // Throws error
+
 ### Object
 Properties of the new object override those of the old.
 
+    { type: "fruit", name: "orange" }, { name: "apple" } => { type: "fruit, name: "apple }
+    { a: 1, b: 2 }, { b: 3, c: 4 } => { a: 1, b: 3, c: 4 }
+    {}, 4 => {} // Throws error
+    {}, [] => {} // Throw error
 
 Using a Library of Objects
 --------------------------
@@ -65,7 +85,7 @@ Then use corresponding strings.
 Debugging Objects Created from a Library
 ---------
 
-Turn debugging on.
+Turn debugging on before composing anything.
 
     c0mposer.debug = true;
 
@@ -79,4 +99,5 @@ License
 -------
 
 (c) 2011 Timo Tuominen
+
 c0mposer.js may be freely distributed under the MIT license.
